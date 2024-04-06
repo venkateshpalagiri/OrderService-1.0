@@ -1,8 +1,10 @@
 package com.venkatesh.OrderService.service;
 
 import com.venkatesh.OrderService.entity.Order;
+import com.venkatesh.OrderService.external.client.PaymentService;
 import com.venkatesh.OrderService.external.client.ProductService;
 import com.venkatesh.OrderService.model.OrderRequest;
+import com.venkatesh.OrderService.model.PaymentRequest;
 import com.venkatesh.OrderService.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class OrderServiceImpl implements OrderService{
     private OrderRepository orderRepository;
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private PaymentService paymentService;
     @Override
     public long placeOrder(OrderRequest orderRequest){
 
@@ -41,6 +46,28 @@ public class OrderServiceImpl implements OrderService{
                 .build();
         order=orderRepository.save(order);
         log.info("Order Places Successfully with Order Id:{}",order.getId());
+
+        PaymentRequest paymentRequest=PaymentRequest
+                .builder()
+                .orderId(order.getId())
+                .paymentMode(orderRequest.getPaymentmode())
+                .referenceNumber("123456")
+                .amount(orderRequest.getTotalAmount())
+                .build();
+
+        String orderStatus=null;
+        try {
+            paymentService.doPayment(paymentRequest);
+            log.info("Payment done Successfully. changing the Order status to ORDER_PLACED");
+            orderStatus="ORDER_PLACED";
+
+        }catch (Exception e){
+            log.error("Error occurred in payment. Changing order status to PAYMENT_FAILED");
+            orderStatus="PAYMENT_FAILED";
+        }
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
+
         return order.getId();
 
     }
