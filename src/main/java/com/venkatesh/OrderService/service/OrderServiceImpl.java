@@ -1,14 +1,17 @@
 package com.venkatesh.OrderService.service;
 
 import com.venkatesh.OrderService.entity.Order;
+import com.venkatesh.OrderService.external.client.PaymentService;
 import com.venkatesh.OrderService.external.client.ProductService;
 import com.venkatesh.OrderService.model.OrderRequest;
+import com.venkatesh.OrderService.model.PaymentRequest;
 import com.venkatesh.OrderService.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Random;
 
 @Service
 @Log4j2
@@ -18,6 +21,9 @@ public class OrderServiceImpl implements OrderService{
     private OrderRepository orderRepository;
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private PaymentService paymentService;
     @Override
     public long placeOrder(OrderRequest orderRequest){
 
@@ -41,6 +47,35 @@ public class OrderServiceImpl implements OrderService{
                 .build();
         order=orderRepository.save(order);
         log.info("Order Places Successfully with Order Id:{}",order.getId());
+
+//        for generating random long for refereneceNumber
+        Random random=new Random();
+        long randomLong=random.nextLong();
+        if(randomLong<0){
+            randomLong=randomLong*(-1);
+        }
+
+        PaymentRequest paymentRequest=PaymentRequest
+                .builder()
+                .orderId(order.getId())
+                .paymentMode(orderRequest.getPaymentmode())
+                .referenceNumber(randomLong)
+                .amount(orderRequest.getTotalAmount())
+                .build();
+
+        String orderStatus=null;
+        try {
+            paymentService.doPayment(paymentRequest);
+            log.info("Payment done Successfully. changing the Order status to ORDER_PLACED");
+            orderStatus="ORDER_PLACED";
+
+        }catch (Exception e){
+            log.error("Error occurred in payment. Changing order status to PAYMENT_FAILED");
+            orderStatus="PAYMENT_FAILED";
+        }
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
+
         return order.getId();
 
     }
