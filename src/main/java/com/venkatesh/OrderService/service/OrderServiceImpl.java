@@ -4,20 +4,24 @@ import com.venkatesh.OrderService.entity.Order;
 import com.venkatesh.OrderService.external.client.ProductService;
 import com.venkatesh.OrderService.model.OrderRequest;
 import com.venkatesh.OrderService.repository.OrderRepository;
-import lombok.extern.log4j.Log4j2;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
 @Service
-@Log4j2
+
 public class OrderServiceImpl implements OrderService{
 
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
     private ProductService productService;
+
+    Logger logger= LogManager.getLogger(OrderServiceImpl.class);
     @Override
     public long placeOrder(OrderRequest orderRequest){
 
@@ -26,10 +30,11 @@ public class OrderServiceImpl implements OrderService{
         /*Call the Payment Service to complete the payment as well,
         if payment successfull mark order as COMPLETE, Else CANCELLED
          */
-        log.info("Placing Order Request: {}", orderRequest);
+        
+        logger.info("Placing Order Request: {}", orderRequest);
 
         productService.reduceQuantity(orderRequest.getProductId(),orderRequest.getQuantity());
-        log.info("Creating Order with status CREATED");
+        logger.info("Creating Order with status CREATED");
 
 
         Order order=Order.builder()
@@ -40,7 +45,7 @@ public class OrderServiceImpl implements OrderService{
                 .quantity(orderRequest.getQuantity())
                 .build();
         order=orderRepository.save(order);
-        log.info("Order Places Successfully with Order Id:{}",order.getId());
+        logger.info("Order Places Successfully with Order Id:{}",order.getId());
         return order.getId();
 
     }
