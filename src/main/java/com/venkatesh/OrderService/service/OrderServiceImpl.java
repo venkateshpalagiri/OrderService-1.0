@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Random;
 
 @Service
 @Log4j2
@@ -47,11 +48,18 @@ public class OrderServiceImpl implements OrderService{
         order=orderRepository.save(order);
         log.info("Order Places Successfully with Order Id:{}",order.getId());
 
+//        for generating random long for refereneceNumber
+        Random random=new Random();
+        long randomLong=random.nextLong();
+        if(randomLong<0){
+            randomLong=randomLong*(-1);
+        }
+
         PaymentRequest paymentRequest=PaymentRequest
                 .builder()
                 .orderId(order.getId())
                 .paymentMode(orderRequest.getPaymentmode())
-                .referenceNumber("123456")
+                .referenceNumber(randomLong)
                 .amount(orderRequest.getTotalAmount())
                 .build();
 
