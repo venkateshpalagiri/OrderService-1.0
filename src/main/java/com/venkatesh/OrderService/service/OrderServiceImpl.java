@@ -7,10 +7,12 @@ import com.venkatesh.OrderService.external.client.ProductService;
 import com.venkatesh.OrderService.model.OrderRequest;
 import com.venkatesh.OrderService.model.OrderResponse;
 import com.venkatesh.OrderService.model.PaymentRequest;
+import com.venkatesh.OrderService.model.ProductResponse;
 import com.venkatesh.OrderService.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.util.Random;
@@ -26,6 +28,9 @@ public class OrderServiceImpl implements OrderService{
 
     @Autowired
     private PaymentService paymentService;
+    @Autowired
+    private RestTemplate restTemplate;
+
     @Override
     public long placeOrder(OrderRequest orderRequest){
 
@@ -85,13 +90,20 @@ public class OrderServiceImpl implements OrderService{
     public OrderResponse getOrderDetails(long orderId) {
         Order order=orderRepository.findById(orderId)
                 .orElseThrow(()->new CustomException("Order not found with the given Id:"+orderId,"ORDER_NOT_FOUND",500));
-        
+
+        ProductResponse productResponse
+                = restTemplate.getForObject(
+                "http://PRODUCT-SERVICE/product/" + order.getProductId(),
+                ProductResponse.class);
+
+
         OrderResponse orderResponse=OrderResponse
                 .builder()
                 .orderId(order.getId())
                 .orderStatus(order.getOrderStatus())
                 .orderDate(order.getOrderDate())
                 .totalAmount(order.getAmount())
+                .productResponse(productResponse)
                 .build();
 
         return orderResponse;

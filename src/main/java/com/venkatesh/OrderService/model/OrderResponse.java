@@ -16,4 +16,8 @@ public class OrderResponse {
     private String orderStatus;
     private Instant orderDate;
     private long totalAmount;
+    private ProductResponse productResponse;
+
+
+
 }
