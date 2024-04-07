@@ -17,6 +17,7 @@ public class OrderResponse {
     private Instant orderDate;
     private long totalAmount;
     private ProductResponse productResponse;
+    private PaymentResponse paymentResponse;
 
 
 

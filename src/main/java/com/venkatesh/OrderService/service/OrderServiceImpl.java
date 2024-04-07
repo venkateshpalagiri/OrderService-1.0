@@ -4,10 +4,7 @@ import com.venkatesh.OrderService.entity.Order;
 import com.venkatesh.OrderService.exception.CustomException;
 import com.venkatesh.OrderService.external.client.PaymentService;
 import com.venkatesh.OrderService.external.client.ProductService;
-import com.venkatesh.OrderService.model.OrderRequest;
-import com.venkatesh.OrderService.model.OrderResponse;
-import com.venkatesh.OrderService.model.PaymentRequest;
-import com.venkatesh.OrderService.model.ProductResponse;
+import com.venkatesh.OrderService.model.*;
 import com.venkatesh.OrderService.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,6 +92,19 @@ public class OrderServiceImpl implements OrderService{
                 = restTemplate.getForObject(
                 "http://PRODUCT-SERVICE/product/" + order.getProductId(),
                 ProductResponse.class);
+        PaymentResponse paymentResponse=
+                restTemplate.getForObject(
+                        "http://PAYMENT-SERVICE/payment/"+order.getId(),PaymentResponse.class
+                );
+
+        ProductResponse productResponse1=
+                ProductResponse
+                        .builder()
+                        .productId(order.getProductId())
+                        .productName(productResponse.getProductName())
+                        .price(order.getAmount())
+                        .quantity(order.getQuantity())
+                        .build();
 
 
         OrderResponse orderResponse=OrderResponse
@@ -103,7 +113,8 @@ public class OrderServiceImpl implements OrderService{
                 .orderStatus(order.getOrderStatus())
                 .orderDate(order.getOrderDate())
                 .totalAmount(order.getAmount())
-                .productResponse(productResponse)
+                .productResponse(productResponse1)
+                .paymentResponse(paymentResponse)
                 .build();
 
         return orderResponse;
