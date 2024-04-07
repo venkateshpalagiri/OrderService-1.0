@@ -1,9 +1,11 @@
 package com.venkatesh.OrderService.service;
 
 import com.venkatesh.OrderService.entity.Order;
+import com.venkatesh.OrderService.exception.CustomException;
 import com.venkatesh.OrderService.external.client.PaymentService;
 import com.venkatesh.OrderService.external.client.ProductService;
 import com.venkatesh.OrderService.model.OrderRequest;
+import com.venkatesh.OrderService.model.OrderResponse;
 import com.venkatesh.OrderService.model.PaymentRequest;
 import com.venkatesh.OrderService.repository.OrderRepository;
 import lombok.extern.log4j.Log4j2;
@@ -78,5 +80,20 @@ public class OrderServiceImpl implements OrderService{
 
         return order.getId();
 
+    }
+    @Override
+    public OrderResponse getOrderDetails(long orderId) {
+        Order order=orderRepository.findById(orderId)
+                .orElseThrow(()->new CustomException("Order not found with the given Id:"+orderId,"ORDER_NOT_FOUND",500));
+        
+        OrderResponse orderResponse=OrderResponse
+                .builder()
+                .orderId(order.getId())
+                .orderStatus(order.getOrderStatus())
+                .orderDate(order.getOrderDate())
+                .totalAmount(order.getAmount())
+                .build();
+
+        return orderResponse;
     }
 }
