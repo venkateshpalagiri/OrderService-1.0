@@ -41,7 +41,7 @@ public class OrderServiceApplication {
 						)
 				)
 		);
-		return new RestTemplate();
+		return restTemplate;
 	}
 	@Bean
 	public OAuth2AuthorizedClientManager auth2AuthorizedClientManager(
